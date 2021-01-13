@@ -18,7 +18,7 @@ public class DBConnector {
 		try {
 			// db parameters
 			String url = "jdbc:sqlite:" + dbFile;
-			System.out.println(url);
+			Log.i("DB",url);
 			// create a connection to the database
 			conn = DriverManager.getConnection(url);
 			

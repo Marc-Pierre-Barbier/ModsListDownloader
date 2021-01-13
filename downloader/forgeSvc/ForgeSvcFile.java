@@ -26,12 +26,6 @@ public class ForgeSvcFile {
 	}
 
 	public String getDownloadUrl(int modID) throws MalformedURLException {
-		System.out.println("https://addons-ecs.forgesvc.net/api/v2/addon/"+modID+"/file/"+getProjectFileId());
 		return HttpHelper.readStringFromUrl("https://addons-ecs.forgesvc.net/api/v2/addon/"+modID+"/file/"+projectFileId+"/download-url");
-	}
-	
-	public String getMD5(int modID)
-	{
-		return "https://addons-ecs.forgesvc.net/api/v2/addon/"+modID+"/file/"+getProjectFileId();
 	}
 }

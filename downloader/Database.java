@@ -1,10 +1,13 @@
 package downloader;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -22,68 +25,86 @@ public class Database {
 	String version;
 	DBConnector connector;
 	Gson gson;
+	IntegrityChecker integrityChecker;
+	File dbVer;
 
 	public Database() {
+		dbVer = new File("dbVersion");
+		if (dbVer.exists()) {
+			try {
+				BufferedReader bfr = new BufferedReader(new FileReader(dbVer));
+				this.version = bfr.readLine();
+				bfr.close();
 
-		// Todo save ver
-		this.version = "";
+				connector = new DBConnector();
+				connector.connect(new File("database.dat").getAbsolutePath());
+
+			} catch (IOException | SQLException e) {
+				dbVer.delete();
+				version = "";
+			}
+		} else {
+			version = "";
+		}
 		gson = new Gson();
-		
+		integrityChecker = new IntegrityChecker();
+
 	}
 
 	public void updateDatabase() {
 		try {
 			String dbVersion = HttpHelper.readStringFromUrl("http://files.mcdex.net/data/latest.v5");
 			if (dbVersion.equals(version)) {
-				println("alredy up to date");
+				Log.i("DB", "alredy up to date");
 				return;
 			}
 			if (dbVersion.equals("error")) {
-				println("an error ocured");
+				Log.i("DB", "an error ocured");
 				return;
 			}
 
-			println("newer version found");
+			Log.i("DB", "newer version found");
 			if (!this.version.isEmpty()) {
-				println("current=" + this.version + " remote=" + dbVersion);
+				Log.i("DB", "current=" + this.version + " remote=" + dbVersion);
 			} else {
-				println("new=" + dbVersion);
+				Log.i("DB", "new=" + dbVersion);
 			}
 
-			println("fetching=" + "http://files.mcdex.net/data/mcdex-v5-" + dbVersion + ".dat.bz2");
-			File archive = HttpHelper.readFileFromUrl(null,"http://files.mcdex.net/data/mcdex-v5-" + dbVersion + ".dat.bz2");
-			println("download finished");
-			println("decompressing db");
+			Log.i("DB", "fetching=" + "http://files.mcdex.net/data/mcdex-v5-" + dbVersion + ".dat.bz2");
+			File archive = HttpHelper.readFileFromUrl("http://files.mcdex.net/data/mcdex-v5-" + dbVersion + ".dat.bz2");
+			Log.i("DB", "download finished");
+			Log.i("DB", "decompressing db");
 			File decompressedDatabase;
 			try {
 				decompressedDatabase = decompressBz2(archive, "database.dat");
 			} catch (IOException e) {
-				println("cannot extract database");
+				Log.i("DB", "cannot extract database");
 				return;
 			}
-			println("done");
-			println("loading the database");
+			Log.i("DB", "done");
+			Log.i("DB", "loading the database");
 			connector = new DBConnector();
 			try {
 				connector.connect(decompressedDatabase.getAbsolutePath());
 			} catch (SQLException e) {
 				return;
 			}
-			println("database loaded");
+			Log.i("DB", "database loaded");
 			this.version = dbVersion;
-
+			Log.i("DB", "saving db data");
+			dbVer.delete();
+			try {
+				dbVer.createNewFile();
+				PrintWriter p = new PrintWriter(dbVer);
+				p.print(version);
+				p.close();
+			} catch (Exception e) {
+				Log.e("DB", "failed to save db");
+			}
 		} catch (MalformedURLException e) {
-			println("database link is dead");
+			Log.i("DB", "database link is dead");
 			System.exit(1);
 		}
-	}
-
-	private void print(String message) {
-		System.out.print("db : " + message);
-	}
-
-	private void println(String message) {
-		print(message + "\n");
 	}
 
 	private File decompressBz2(File inputFile, String outputFile) throws IOException {
@@ -102,9 +123,9 @@ public class Database {
 		try {
 			if (rs.next()) {
 				modID = rs.getInt("projectid");
-				System.out.println("modid:" + modID);
+				Log.i("DB", "modid:" + modID);
 			} else {
-				System.out.println("not found " + slug);
+				Log.e("DB", "not found " + slug);
 				return -1;
 			}
 		} catch (SQLException e) {
@@ -119,8 +140,6 @@ public class Database {
 	}
 
 	private ProjectInfo getProjectInfo(int projectId) {
-		System.out.println(
-				"select slug, name, description from projects where projectid = " + projectId + " and type = 0");
 		ResultSet rs = connector.executeRequest(
 				"select slug, name, description from projects where projectid = " + projectId + " and type = 0");
 		try {
@@ -135,24 +154,34 @@ public class Database {
 	public boolean fetchMod(String string) {
 		String name = string.split("/")[5];
 		int modID = findModBySlug(name);
-		if (modID == -1)
+		if (modID == -1) {
+			Log.e("DB", "could not find mod id");
 			return false;
+		}
+
 		ProjectInfo pj = getProjectInfo(modID);
 		if (pj == null)
 			return false;
 		CurseForgeModFile modfile = new CurseForgeModFile(pj, modID, -1, false);
 		ForgeSvcFile file = getLastestFile("1.12.2", modfile);
+
 		if (file != null) {
 			try {
-				print("downloading  " + pj.getName());
-				HttpHelper.readFileFromUrlToFolder(pj.getSlug(),file.getDownloadUrl(modID), "mods");
-				println("download finished");
+				String downloadUrl = file.getDownloadUrl(modID);
+
+				Log.i("DB", "checking " + pj.getName());
+				integrityChecker.checkAndDelete(new File("mods/" + HttpHelper.getFileNameFromURL(downloadUrl)),
+						pj.getSlug());
+				// on remplace les espace par des tiret pour eviter toute confusion
+				Log.i("DB", "downloading  " + pj.getName().replace(" ", "-"));
+				HttpHelper.readFileFromUrlToFolder(downloadUrl, "mods");
+				Log.i("DB", "download finished");
 				return true;
 			} catch (MalformedURLException e) {
 				e.printStackTrace();
 			}
 		} else {
-			System.out.println("no file in server");
+			Log.e("DB", "no file in server");
 		}
 		return false;
 	}
@@ -162,23 +191,21 @@ public class Database {
 		String jsonProject;
 		try {
 			jsonProject = HttpHelper.readStringFromUrl(projectUrl);
-			if(jsonProject.equals("error"))return null;
+			if (jsonProject.equals("error"))
+				return null;
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 			return null;
 		}
-	
+
 		ForgeSvcEntry entry = gson.fromJson(jsonProject, ForgeSvcEntry.class);
 
 		for (ForgeSvcFile f : entry.getFiles()) {
-				if (f.getGameVersion().equals(minecraftVer)) {
-					return f;
+			if (f.getGameVersion().equals(minecraftVer)) {
+				return f;
 			}
 		}
 		return null;
 	}
-	
-	
-	
 
 }

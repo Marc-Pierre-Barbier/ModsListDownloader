@@ -10,11 +10,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.zip.ZipFile;
 
 public class HttpHelper {
 
-	public static String[] fileList;
 
 	public static String readStringFromUrl(String urlToFetch) throws MalformedURLException {
 		URL url = new URL(urlToFetch);
@@ -47,38 +45,36 @@ public class HttpHelper {
 		return str;
 	}
 
-	public static File readFileFromUrl(String slug, String urlToFetch) throws MalformedURLException {
+	public static File readFileFromUrl(String urlToFetch) throws MalformedURLException {
 		String[] url = urlToFetch.split("/");
 		if (url.length == 0)
 			throw new MalformedURLException();
 
-		return readFileFromUrl(slug, urlToFetch, url[url.length - 1]);
+		return readFileFromUrl(urlToFetch, url[url.length - 1]);
 	}
 
-	public static File readFileFromUrl(String slug, String urlToFetch, String filename) throws MalformedURLException {
-		return readFileFromUrl(slug, urlToFetch, new File(filename));
+	public static File readFileFromUrl(String urlToFetch, String filename) throws MalformedURLException {
+		return readFileFromUrl(urlToFetch, new File(filename));
 	}
 
-	static File readFileFromUrlToFolder(String slug, String urlToFetch, String folder) throws MalformedURLException {
+	public static File readFileFromUrlToFolder(String urlToFetch, String folder) throws MalformedURLException {
 		try {
 			Files.createDirectories(Paths.get(folder));
 		} catch (IOException e) {
-			System.out.println("could not create folder");
+			Log.e("HTTPHelper","could not create folder");
 			return null;
 		}
 
 		if (!folder.endsWith("/"))
 			folder += "/";
 
-		String[] url = urlToFetch.split("/");
-		if (url.length == 0)
-			throw new MalformedURLException();
-		String name = url[url.length - 1];
+		String name = getFileNameFromURL(urlToFetch);
+		if(name == null)throw new MalformedURLException();
 
-		return readFileFromUrl(slug, urlToFetch, new File(folder + name));
+		return readFileFromUrl(urlToFetch, new File(folder + name));
 	}
 
-	private static File readFileFromUrl(String slug, String urlToFetch, File destination) throws MalformedURLException {
+	private static File readFileFromUrl(String urlToFetch, File destination) throws MalformedURLException {
 		URL url = new URL(urlToFetch);
 		HttpURLConnection con;
 		try {
@@ -90,16 +86,13 @@ public class HttpHelper {
 
 		File downloadingFile = destination;
 
-		if (slug != null)
-			checkAndDelete(downloadingFile, slug);
-
 		if (downloadingFile.exists()) {
 			return downloadingFile;
 		} else {
 			try {
 				downloadingFile.createNewFile();
 			} catch (IOException e) {
-				System.out.println("permission error could not write file");
+				Log.e("HTTPHelper","permission error could not write file");
 				System.exit(1);
 			}
 		}
@@ -113,7 +106,7 @@ public class HttpHelper {
 		}
 
 		try (InputStream in = con.getInputStream()) {
-			int totalRead = 0;
+			//int totalRead = 0;
 			// on lit par tranche de 4mo
 			byte[] buffer = new byte[4096];
 
@@ -121,9 +114,10 @@ public class HttpHelper {
 				int bytesRead = in.read(buffer);
 				if (bytesRead < 0)
 					break;
-				totalRead += bytesRead;
+				//totalRead += bytesRead;
 				downloadingWriter.write(buffer, 0, bytesRead);
-				System.out.println("\r" + totalRead);
+				//TODO afficher cette valeur si on a un ui
+				//System.out.println("\r" + totalRead);
 			}
 			downloadingWriter.close();
 			return downloadingFile;
@@ -132,31 +126,14 @@ public class HttpHelper {
 		return null;
 
 	}
-
-	// suprime les versions obselettes
-	private static void checkAndDelete(File fForgeSvcFile, String slug) {
-		if (fileList == null) {
-			fileList = new File("mods").list();
-		}
-
-		if (fForgeSvcFile.exists()) {
-			try {
-				//si sa balance une exception sa veut dire que le jar n'est pas lisible
-				new ZipFile(fForgeSvcFile).close();
-			} catch (IOException e) {
-				fForgeSvcFile.delete();
-				return;
-			}
-			
-			for (String s : fileList) {
-				if (s.contains(slug)) {
-					if (!fForgeSvcFile.getName().contains(s)) {
-						new File(s).delete();
-					}
-					return;
-				}
-			}
-
-		}
+	
+	public static String getFileNameFromURL(String url)
+	{
+		String[] urlsplit = url.split("/");
+		if (urlsplit.length == 0)
+			return null;
+		return urlsplit[urlsplit.length - 1];
 	}
+
+	
 }
