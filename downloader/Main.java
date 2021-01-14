@@ -6,9 +6,18 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class Main {
 	public static void main(String[] args) throws FileNotFoundException, IOException, URISyntaxException {		
+		try {
+			Files.createDirectories(Paths.get("mods"));
+		} catch (IOException e) {
+			Log.e("HTTPHelper","could not create folder");
+			System.exit(0);
+		}
+		
 		
 		IntegrityChecker updateManager = new IntegrityChecker();
 		Database db = new Database();

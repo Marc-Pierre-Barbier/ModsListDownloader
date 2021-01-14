@@ -31,6 +31,13 @@ public class IntegrityChecker {
 				installedMods = new TreeMap<>();
 				modsMap.delete();
 			}
+		}else {
+			try {
+				modsMap.createNewFile();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		try {
 			ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(modsMap));
