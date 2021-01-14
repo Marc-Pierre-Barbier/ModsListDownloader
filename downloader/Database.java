@@ -123,7 +123,6 @@ public class Database {
 		try {
 			if (rs.next()) {
 				modID = rs.getInt("projectid");
-				Log.i("DB", "modid:" + modID);
 			} else {
 				Log.e("DB", "not found " + slug);
 				return -1;
@@ -169,13 +168,27 @@ public class Database {
 			try {
 				String downloadUrl = file.getDownloadUrl(modID);
 
-				Log.i("DB", "checking " + pj.getName());
-				integrityChecker.checkAndDelete(new File("mods/" + HttpHelper.getFileNameFromURL(downloadUrl)),
-						pj.getSlug());
-				// on remplace les espace par des tiret pour eviter toute confusion
-				Log.i("DB", "downloading  " + pj.getName().replace(" ", "-"));
-				HttpHelper.readFileFromUrlToFolder(downloadUrl, "mods");
-				Log.i("DB", "download finished");
+				Log.i("MOD", "checking " + pj.getName().replace(" ", "-"));
+				// si on connais le mod alors on se base si son fichier sinon on essay de le
+				// trouver
+				boolean upToDate;
+				if (integrityChecker.isModIdKnown(modID)) {
+					upToDate = integrityChecker
+							.checkAndDelete(new File("mods/" + HttpHelper.getFileNameFromURL(downloadUrl)), modID);
+				} else {
+					upToDate = integrityChecker.checkAndDelete(
+							new File("mods/" + HttpHelper.getFileNameFromURL(downloadUrl)), pj.getSlug());
+				}
+				if (!upToDate) {
+					// on remplace les espace par des tiret pour eviter toute confusion
+					Log.i("MOD", "downloading  " + pj.getName().replace(" ", "-"));
+					HttpHelper.readFileFromUrlToFolder(downloadUrl, "mods");
+					Log.i("MOD", "download finished");
+					if (!integrityChecker.isModIdKnown(modID)) {
+						integrityChecker.addModsToTheList(HttpHelper.getFileNameFromURL(downloadUrl), modID);
+						Log.i("DB", "added a mod to the registry");
+					}
+				}
 				return true;
 			} catch (MalformedURLException e) {
 				e.printStackTrace();

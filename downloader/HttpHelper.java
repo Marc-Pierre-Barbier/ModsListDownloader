@@ -58,6 +58,13 @@ public class HttpHelper {
 	}
 
 	public static File readFileFromUrlToFolder(String urlToFetch, String folder) throws MalformedURLException {
+		String name = getFileNameFromURL(urlToFetch);
+		if(name == null)throw new MalformedURLException();
+
+		return readFileFromUrlToFolder(urlToFetch, folder,name);
+	}
+	
+	public static File readFileFromUrlToFolder(String urlToFetch, String folder,String name) throws MalformedURLException {
 		try {
 			Files.createDirectories(Paths.get(folder));
 		} catch (IOException e) {
@@ -68,10 +75,7 @@ public class HttpHelper {
 		if (!folder.endsWith("/"))
 			folder += "/";
 
-		String name = getFileNameFromURL(urlToFetch);
-		if(name == null)throw new MalformedURLException();
-
-		return readFileFromUrl(urlToFetch, new File(folder + name));
+		return readFileFromUrl(urlToFetch, new File((folder + name.toLowerCase()).trim()));
 	}
 
 	private static File readFileFromUrl(String urlToFetch, File destination) throws MalformedURLException {
@@ -85,14 +89,17 @@ public class HttpHelper {
 		}
 
 		File downloadingFile = destination;
+		System.out.println(downloadingFile.getAbsolutePath());
 
 		if (downloadingFile.exists()) {
 			return downloadingFile;
 		} else {
 			try {
+				System.out.println(downloadingFile);
 				downloadingFile.createNewFile();
 			} catch (IOException e) {
 				Log.e("HTTPHelper","permission error could not write file");
+				e.printStackTrace();
 				System.exit(1);
 			}
 		}
@@ -115,7 +122,7 @@ public class HttpHelper {
 				if (bytesRead < 0)
 					break;
 				//totalRead += bytesRead;
-				downloadingWriter.write(buffer, 0, bytesRead);
+				downloadingWriter.write(buffer, 0, 	bytesRead);
 				//TODO afficher cette valeur si on a un ui
 				//System.out.println("\r" + totalRead);
 			}

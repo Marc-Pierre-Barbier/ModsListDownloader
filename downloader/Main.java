@@ -24,18 +24,19 @@ public class Main {
 			if (!isAComment(line)) {
 				if(line.startsWith("direct="))
 				{
-					String filename = line.replaceFirst("direct=*@", "");
+					String url = line.replaceFirst("direct=.*@", "");
+					String filename=extractNameFromLink(line);
 					
 					//le slug est une nom de mods qui se trouve dans le nom du fichier
 					String slug = extractSlugFromLink(line);
 					//on check si le mods est pas déja installé et si il est a jours
-					updateManager.checkAndDelete(new File("mods/"+filename), slug);
-					
-					String[] url = line.replaceFirst("direct=*@", "").split("/");
-					Log.i("main","downloading "+ url[url.length -1 ]);
-					
-					HttpHelper.readFileFromUrlToFolder(filename,"mods");
-					Log.i("main","done");
+					boolean upToDate = updateManager.checkAndDelete(new File("mods/"+filename), slug);
+					if(!upToDate)
+					{
+						Log.i("main","downloading "+ filename);
+						HttpHelper.readFileFromUrlToFolder(url,"mods",filename);
+						Log.i("main","done");
+					}
 				}else {
 					if (line.split("/").length >= 5 && !db.fetchMod(line)) {
 							Log.e("main","error could not get " + line);
@@ -44,13 +45,21 @@ public class Main {
 			}
 		}
 		in.close();
+		Log.i("Main", "finished");
 	}
 	
 	private static String extractSlugFromLink(String line) {
-		char[] chars = new char[line.length()-line.indexOf("@")-"direct=".length()+1];
-		line.getChars("direct=".length(), line.indexOf("@"), chars, 0);
+		char[] chars = new char[line.length()-line.indexOf(";")-"direct=".length()+1];
+		line.getChars("direct=".length(), line.indexOf(";"), chars, 0);
 		return new String(chars);
 	}
+	
+	private static String extractNameFromLink(String line) {
+		char[] chars = new char[line.indexOf("@")-line.indexOf(";")];
+		line.getChars(line.indexOf(";")+1, line.indexOf("@"), chars, 0);
+		return new String(chars);
+	}
+
 
 	public static boolean isAComment(String line)
 	{
