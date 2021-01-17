@@ -173,9 +173,11 @@ public class Database {
 				// trouver
 				boolean upToDate;
 				if (integrityChecker.isModIdKnown(modID)) {
+					Log.i("DB", "found");
 					upToDate = integrityChecker
 							.checkAndDelete(new File("mods/" + HttpHelper.getFileNameFromURL(downloadUrl)), modID);
 				} else {
+					Log.i("DB", "NEW MOD DETECTED "+modID);
 					upToDate = integrityChecker.checkAndDelete(
 							new File("mods/" + HttpHelper.getFileNameFromURL(downloadUrl)), pj.getSlug());
 				}

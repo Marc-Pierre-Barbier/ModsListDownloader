@@ -50,7 +50,26 @@ public class IntegrityChecker {
 	}
 	
 	public boolean checkAndDelete(File modToDownload, int modid) {
-		File alredyInstalledMods = new File("mods/"+installedMods.get(modid));
+		String alredyInstalledName = installedMods.get(modid).toLowerCase();	
+		File alredyInstalledMods= null;
+		
+		
+		//on cherche le fichier local affin de ne pas voir d'erreur avec la casse
+		File dir = new File("mods/");
+		for(String fileName : dir.list())
+		{
+			if(fileName.equalsIgnoreCase(alredyInstalledName))
+			{
+				alredyInstalledMods = new File("mods/"+fileName);
+			}
+		}
+		if(alredyInstalledMods == null) {
+			Log.e("IntegrityChecker", "alredy installed mod not found ("+alredyInstalledName+")");
+			installedMods.remove(modid);
+			
+			return false;
+		}
+
 		if (alredyInstalledMods.exists()) {
 			try {
 				//si sa balance une exception sa veut dire que le jar n'est pas lisible
@@ -58,19 +77,25 @@ public class IntegrityChecker {
 			} catch (IOException e) {
 				Log.i("integrityChecker","Corruption detected redownloading");
 				alredyInstalledMods.delete();
+				installedMods.remove(modid);
+				updateFile();
 				return false;
 			}
-			if(!modToDownload.getAbsolutePath().equals(alredyInstalledMods.getAbsolutePath()))
+			if(!modToDownload.getAbsolutePath().equalsIgnoreCase(alredyInstalledMods.getAbsolutePath()))
 			{
 				alredyInstalledMods.delete();
-				Log.i("integrityChecker","Corruption detected redownloading");
+				Log.i("integrityChecker","Outdated mod detected redownloading ("+alredyInstalledName+" -> "+modToDownload.getName()+")");
+				installedMods.remove(modid);
+				updateFile();
 				return false;
 			}
 			return true;
 		}else {
 			if(modToDownload.exists())
 			{
-				modToDownload.delete();
+				installedMods.put(modid, modToDownload.getName());
+				updateFile();
+				Log.i("interessting", modToDownload.getName());
 			}
 		}
 		return false;
@@ -105,6 +130,11 @@ public class IntegrityChecker {
 		return false;
 	}
 	
+	/**
+	 * un chemin d'acces ne marche pas
+	 * @param fileName
+	 * @param modID
+	 */
 	public void addModsToTheList(String fileName,int modID)
 	{
 		installedMods.put(modID, fileName);	
