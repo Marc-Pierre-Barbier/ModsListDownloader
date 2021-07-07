@@ -1,24 +1,27 @@
 package downloader;
 
 public class ProjectInfo {
-	private String slug, name, desc;
-
+	private String slug;
+	
+	private String name;
+	
+	private String desc;
+	
 	public ProjectInfo(String slug, String name, String desc) {
-		super();
 		this.slug = slug;
 		this.name = name;
 		this.desc = desc;
 	}
 	
 	public String getDesc() {
-		return desc;
+		return this.desc;
 	}
+	
 	public String getName() {
-		return name;
+		return this.name;
 	}
+	
 	public String getSlug() {
-		return slug;
+		return this.slug;
 	}
-	
-	
 }

@@ -1,8 +1,7 @@
 package downloader.forgeSvc;
 
-import java.net.MalformedURLException;
-
 import downloader.HttpHelper;
+import java.net.MalformedURLException;
 
 public class ForgeSvcFile {
 	private String gameVersion;
@@ -11,21 +10,22 @@ public class ForgeSvcFile {
 	private String projectFileName;
 	
 	public String getGameVersion() {
-		return gameVersion;
+		return this.gameVersion;
 	}
 	
 	public int getFileType() {
-		return fileType;
+		return this.fileType;
 	}
+	
 	public int getProjectFileId() {
-		return projectFileId;
+		return this.projectFileId;
 	}
 	
 	public String getProjectFileName() {
-		return projectFileName;
+		return this.projectFileName;
 	}
-
+	
 	public String getDownloadUrl(int modID) throws MalformedURLException {
-		return HttpHelper.readStringFromUrl("https://addons-ecs.forgesvc.net/api/v2/addon/"+modID+"/file/"+projectFileId+"/download-url");
+		return HttpHelper.readStringFromUrl("https://addons-ecs.forgesvc.net/api/v2/addon/" + modID + "/file/" + this.projectFileId + "/download-url");
 	}
 }

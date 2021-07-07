@@ -8,36 +8,28 @@ import java.sql.SQLException;
 public class DBConnector {
 	private Connection conn;
 
-	/**
-	 * Connect to a sample database
-	 * 
-	 * @throws SQLException
-	 */
 	public void connect(String dbFile) throws SQLException {
-		conn = null;
+		this.conn = null;
 		try {
-			// db parameters
 			String url = "jdbc:sqlite:" + dbFile;
-			Log.i("DB",url);
-			// create a connection to the database
-			conn = DriverManager.getConnection(url);
-			
+			Log.i("DB", url);
+			this.conn = DriverManager.getConnection(url);
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
 			throw e;
-		}
+		} 
 	}
 
 	public void close() throws SQLException {
-		conn.close();
+		this.conn.close();
 	}
 
 	public ResultSet executeRequest(String sql) {
 		try {
-			return conn.createStatement().executeQuery(sql);
+			return this.conn.createStatement().executeQuery(sql);
 		} catch (SQLException e) {
 			e.printStackTrace();
-		}
-		return null;
+			return null;
+		} 
 	}
 }
