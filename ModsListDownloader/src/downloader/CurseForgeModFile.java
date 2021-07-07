@@ -19,7 +19,6 @@ public class CurseForgeModFile extends ProjectInfo {
   	public int getFileID() {
   		return this.fileID;
   	}
-
   	public int getProjectID() {
   		return this.projectID;
   	}

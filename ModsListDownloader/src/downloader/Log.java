@@ -1,6 +1,8 @@
 package downloader;
 
 public class Log {
+	private Log() {}
+
 	public static void e(String who, String msg) {
 		System.err.println(String.valueOf(who) + "  :  " + msg);
 	}

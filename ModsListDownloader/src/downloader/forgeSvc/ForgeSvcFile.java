@@ -1,7 +1,8 @@
 package downloader.forgeSvc;
 
-import downloader.HttpHelper;
 import java.net.MalformedURLException;
+
+import downloader.helper.HttpHelper;
 
 public class ForgeSvcFile {
 	private String gameVersion;
