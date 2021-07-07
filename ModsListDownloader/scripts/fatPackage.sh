@@ -3,7 +3,7 @@ if test -f "mcDownloader.jar"; then
 fi
 
 pwd
-LIBS=$( cd objs/ && ls ../libs/*.jar)
+LIBS=$( cd objs/ && ls ../lib/*.jar)
 echo $LIBS
 cd objs
 
