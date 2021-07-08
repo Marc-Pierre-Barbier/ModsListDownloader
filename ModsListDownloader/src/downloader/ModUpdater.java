@@ -59,7 +59,7 @@ public class ModUpdater {
 		//on attend la fin des threads
 		while( !threads.isEmpty() ) {
 			try {
-				Thread.sleep(10);
+				Thread.sleep(100);
 			} catch (InterruptedException e) {}
 		}
 		Log.i(ME, "finished");
@@ -82,7 +82,7 @@ final class UpdaterThread extends Thread {
 	private static final String ME = "ModUpdaterThread";
 
 	public UpdaterThread(String line, Database db, DirectUpdateManager directUpdateManager, CurseUpdateManager curseUpdateManager, List<Thread> threads) {
-		super();
+		super(line);
 		this.line = line;
 		this.db = db;
 		this.directUpdateManager = directUpdateManager;
@@ -118,7 +118,6 @@ final class UpdaterThread extends Thread {
 		//le slug est une nom de mods qui se trouve dans le nom du fichier
 		String slug = extractSlugFromLink(line);
 		//on check si le mods est pas déja installé et si il est a jours
-		Log.e("who",slug);
 		boolean upToDate = directUpdateManager.checkAndDelete(filename, slug);
 		if(!upToDate)
 		{
@@ -152,13 +151,13 @@ final class UpdaterThread extends Thread {
 					Log.i("DB", "NEW MOD DETECTED " + modID);
 					upToDate = this.curseUpdateManager.checkAndDelete(new File("mods/" + HttpHelper.getFileNameFromURL(downloadUrl)), pj.getSlug());
 					if(upToDate) {
+						Log.i("who", "file found");
 						this.curseUpdateManager.addModsToTheList("mods/" + HttpHelper.getFileNameFromURL(downloadUrl), modID);
 					}
 				} 
 
 				if (!upToDate) {
 					Log.i("MOD", "downloading  " + pj.getName().replace(" ", "-")); 
-					
 					HttpHelper.readFileFromUrlToFolder(downloadUrl, "mods"); 
 					
 					Log.i("MOD", "download finished");

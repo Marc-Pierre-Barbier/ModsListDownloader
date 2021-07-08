@@ -34,7 +34,7 @@ public class Database {
 	
 	private int findProjectBySlug(String slug, int ptype) {
 		int pjId = -1;
-		ResultSet rs = this.connector.executeRequest("select projectid from projects where type =" + ptype + " and slug LIKE \"%" + slug.trim().toLowerCase() + "%\"");
+		ResultSet rs = this.connector.executeRequest("select projectid from projects where type =" + ptype + " and slug LIKE \"" + slug.trim().toLowerCase() + "\"");
 		try {
 			if (rs.next()) {
 				pjId = rs.getInt("projectid");
