@@ -118,15 +118,16 @@ final class UpdaterThread extends Thread {
 		//le slug est une nom de mods qui se trouve dans le nom du fichier
 		String slug = extractSlugFromLink(line);
 		//on check si le mods est pas déja installé et si il est a jours
+		Log.e("who",slug);
 		boolean upToDate = directUpdateManager.checkAndDelete(filename, slug);
 		if(!upToDate)
 		{
-			Log.i("main","downloading "+ filename);
+			Log.i(ME,"downloading "+ filename);
 			try {
                 HttpHelper.readFileFromUrlToFolder(url,"mods",filename);
-                Log.i("main","done");
+                Log.i(ME,"done");
             } catch (MalformedURLException e) {
-                Log.e("ModUpdater", "could not update mod, error while downloading");
+                Log.e(ME, "could not update mod, error while downloading");
             }
 		}
     }

@@ -1,6 +1,7 @@
 package downloader;
 
 import java.io.File;
+import java.io.IOException;
 
 import downloader.helper.ArchiveHelper;
 import downloader.helper.SlugHelper;
@@ -13,13 +14,8 @@ public class DirectUpdateManager {
      * @return upToDate
      */
     public boolean checkAndDelete(String filename, String slug) {
-        File mod = new File("mods/"+filename);
-
-        if (!mod.isFile()) {
-            mod.delete();
-            return false;
-        }
-
+        File mod = new File("mods/"+filename.toLowerCase());
+        
         if (!mod.exists()) {
             SlugHelper.deleteBySlug(slug);
             return false;

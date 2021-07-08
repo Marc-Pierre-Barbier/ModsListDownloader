@@ -79,7 +79,6 @@ public class HttpHelper {
 		return readFileFromUrl(urlToFetch, new File((folder + name.toLowerCase()).trim()));
 	}
 
-	//TODO: debug
 	private static File readFileFromUrl(String urlToFetch, File destination) throws MalformedURLException {
 		URL url = new URL(urlToFetch);
 		HttpURLConnection con;
@@ -91,13 +90,11 @@ public class HttpHelper {
 		}
 
 		File downloadingFile = destination;
-		System.out.println(downloadingFile.getAbsolutePath());
 
 		if (downloadingFile.exists()) {
 			return downloadingFile;
 		} else {
 			try {
-				System.out.println(downloadingFile);
 				downloadingFile.createNewFile();
 			} catch (IOException e) {
 				Log.e("HTTPHelper","permission error could not write file");
