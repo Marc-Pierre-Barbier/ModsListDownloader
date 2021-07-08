@@ -8,50 +8,38 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.zip.ZipFile;
 
-public class IntegrityChecker {
-	public String[] fileList;
-	public SortedMap<Integer, String> installedMods;
-	public File modsMap;
+import downloader.helper.ArchiveHelper;
+import downloader.helper.SlugHelper;
+
+public class CurseUpdateManager {
+	private SortedMap<Integer, String> installedMods;
 	
-	@SuppressWarnings("unchecked")
-	public IntegrityChecker()
+	public CurseUpdateManager()
 	{
-		fileList = new File("mods").list();
-		modsMap = new File("mods/modsMap.sav");
-		if(modsMap.exists())
-		{
-			try {
-				ObjectInputStream ois = new ObjectInputStream(new FileInputStream(modsMap));
-				installedMods = (SortedMap<Integer, String>) ois.readObject();
-				if(installedMods == null)installedMods = new TreeMap<>();
-				ois.close();
-			} catch (Exception e) {
-				installedMods = new TreeMap<>();
-				modsMap.delete();
-			}
-		}else {
-			try {
-				modsMap.createNewFile();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		try {
-			ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(modsMap));
-			oos.writeObject(installedMods);
-			oos.close();
-		} catch (IOException e) {
-			Log.e("SAV", "erreur pas de sauvegarde");
-			System.exit(1);
-		}
+		loadModMapFromFile();
 	}
 	
+	@SuppressWarnings("unchecked")
+	private void loadModMapFromFile() {
+		File modsMapFile = new File("mods/modsMap.sav");
+		if(modsMapFile.exists())
+		{
+			try {
+				ObjectInputStream ois = new ObjectInputStream(new FileInputStream(modsMapFile));
+				installedMods = (SortedMap<Integer, String>) ois.readObject();
+				ois.close();
+			} catch (Exception e) {
+				modsMapFile.delete();
+			}
+			if(installedMods == null)installedMods = new TreeMap<>();
+		}
+		this.updateFile();
+	}
+
 	public boolean checkAndDelete(File modToDownload, int modid) {
 		String alredyInstalledName = installedMods.get(modid).toLowerCase();	
 		File alredyInstalledMods= null;
-		
 		
 		//on cherche le fichier local affin de ne pas voir d'erreur avec la casse
 		File dir = new File("mods/");
@@ -60,8 +48,10 @@ public class IntegrityChecker {
 			if(fileName.equalsIgnoreCase(alredyInstalledName))
 			{
 				alredyInstalledMods = new File("mods/"+fileName);
+				break;
 			}
 		}
+
 		if(alredyInstalledMods == null) {
 			Log.e("IntegrityChecker", "alredy installed mod not found ("+alredyInstalledName+")");
 			installedMods.remove(modid);
@@ -70,16 +60,14 @@ public class IntegrityChecker {
 		}
 
 		if (alredyInstalledMods.exists()) {
-			try {
-				//si sa balance une exception sa veut dire que le jar n'est pas lisible
-				new ZipFile(alredyInstalledMods).close();
-			} catch (IOException e) {
-				Log.i("integrityChecker","Corruption detected redownloading");
+			//we only check if the jar file still works
+			if(ArchiveHelper.checkJarIntegrity(alredyInstalledMods)) {
 				alredyInstalledMods.delete();
 				installedMods.remove(modid);
 				updateFile();
 				return false;
 			}
+
 			if(!modToDownload.getAbsolutePath().equalsIgnoreCase(alredyInstalledMods.getAbsolutePath()))
 			{
 				alredyInstalledMods.delete();
@@ -94,37 +82,25 @@ public class IntegrityChecker {
 			{
 				installedMods.put(modid, modToDownload.getName());
 				updateFile();
-				Log.i("interessting", modToDownload.getName());
+				Log.i("CurseUpdater","existing file detected adding it to the register: " + modToDownload.getName());
+				return true;
 			}
 		}
 		return false;
 	}
 	
 	
-	
+	/**
+	 * @return true == file ok
+	 */
 	public boolean checkAndDelete(File modToDownload, String slug) {
 		if (modToDownload.exists()) {
-			try {
-				//si sa balance une exception sa veut dire que le jar n'est pas lisible
-				new ZipFile(modToDownload).close();
-			} catch (IOException e) {
-				Log.i("integrityChecker","Corruption detected redownloading");
-				modToDownload.delete();
+			if (ArchiveHelper.checkJarIntegrity(modToDownload)) {
+				return true;
+			} else {
+				SlugHelper.deleteBySlug(slug);
 				return false;
 			}
-			
-			for (String s : fileList) {
-				if (s.contains(slug)) {
-					if (!modToDownload.getName().contains(s)) {
-						new File(s).delete();
-						Log.i("integrityChecker","Corruption detected redownloading");
-						return false;
-					}
-					return true;
-				}
-			}
-			return false;
-
 		}
 		return false;
 	}
@@ -147,12 +123,15 @@ public class IntegrityChecker {
 	
 	private void updateFile()
 	{
+		File modsMap = new File("mods/modsMap.sav");
 		try {
-			modsMap.delete();
+			if(modsMap.exists())modsMap.delete();
 			ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(modsMap));
 			oos.writeObject(installedMods);
 			oos.close();
-		} catch (IOException e) {}
+		} catch (IOException e) {
+			Log.e("SAV", "erreur pas de sauvegarde");
+		}
 	}
 
 }

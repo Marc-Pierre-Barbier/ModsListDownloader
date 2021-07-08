@@ -12,13 +12,15 @@ public class Main {
 	public static boolean verbose;
 	public static boolean checkingonly;
 	public static Integer threadNb;
-	private static Database db;
+    public static String mcVersion;
 
 	public static void main(String[] args) {
+		this.mcVersion = "1.12.2";
+
 		checkModsDirectory();
 		new DatabaseVersionManager().updateIfNeeded();
-		db = new Database();
 		interpretArgs(args);
+		new ModUpdater().update();
 	}
 
 	public static void checkModsDirectory() {
