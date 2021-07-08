@@ -10,3 +10,6 @@ FAT:
 
 CLEAN:
 	scripts/clean.sh;
+
+RELEASE: FAT
+	scripts/release.sh;
