@@ -4,7 +4,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.MalformedURLException;
 
 import downloader.helper.ArchiveHelper;
@@ -29,9 +31,20 @@ public class DatabaseVersionManager {
         if( version == null || !latestVersion.equals(version) ) {
             Log.i(ME, "new dbVersion avaliable downloading...");
             downloadDatabase(latestVersion);
+            saveDbVersion(latestVersion);
         } else {
             Log.i(ME, "update to Date");
         }
+    }
+
+    private void saveDbVersion(String latestVersion) {
+        File versionFile = new File("dbVersion");
+        PrintWriter out;
+        try {
+            out = new PrintWriter(new FileWriter(versionFile));
+            out.println(latestVersion);
+            out.close();
+        } catch (IOException e) {}
     }
 
     private void downloadDatabase(String dbVersion) {
@@ -81,8 +94,7 @@ public class DatabaseVersionManager {
                 versionFile.delete();
                 return null;
             }
-        } else {
-            throw new FileNotFoundException();
         }
+        throw new FileNotFoundException();
     }
 }

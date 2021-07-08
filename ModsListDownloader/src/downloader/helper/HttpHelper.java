@@ -79,6 +79,7 @@ public class HttpHelper {
 		return readFileFromUrl(urlToFetch, new File((folder + name.toLowerCase()).trim()));
 	}
 
+	//TODO: debug
 	private static File readFileFromUrl(String urlToFetch, File destination) throws MalformedURLException {
 		URL url = new URL(urlToFetch);
 		HttpURLConnection con;

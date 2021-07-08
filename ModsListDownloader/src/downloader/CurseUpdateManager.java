@@ -6,14 +6,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import downloader.helper.ArchiveHelper;
 import downloader.helper.SlugHelper;
 
 public class CurseUpdateManager {
-	private SortedMap<Integer, String> installedMods;
+	private ConcurrentHashMap<Integer, String> installedMods;
 	
 	public CurseUpdateManager()
 	{
@@ -27,18 +26,18 @@ public class CurseUpdateManager {
 		{
 			try {
 				ObjectInputStream ois = new ObjectInputStream(new FileInputStream(modsMapFile));
-				installedMods = (SortedMap<Integer, String>) ois.readObject();
+				installedMods = (ConcurrentHashMap<Integer, String>) ois.readObject();
 				ois.close();
 			} catch (Exception e) {
 				modsMapFile.delete();
 			}
-			if(installedMods == null)installedMods = new TreeMap<>();
 		}
+		if(installedMods == null)installedMods = new ConcurrentHashMap<>();
 		this.updateFile();
 	}
 
 	public boolean checkAndDelete(File modToDownload, int modid) {
-		String alredyInstalledName = installedMods.get(modid).toLowerCase();	
+		String alredyInstalledName = installedMods.get(modid).toLowerCase();
 		File alredyInstalledMods= null;
 		
 		//on cherche le fichier local affin de ne pas voir d'erreur avec la casse
@@ -61,7 +60,7 @@ public class CurseUpdateManager {
 
 		if (alredyInstalledMods.exists()) {
 			//we only check if the jar file still works
-			if(ArchiveHelper.checkJarIntegrity(alredyInstalledMods)) {
+			if(!ArchiveHelper.checkJarIntegrity(alredyInstalledMods)) {
 				alredyInstalledMods.delete();
 				installedMods.remove(modid);
 				updateFile();
@@ -110,18 +109,17 @@ public class CurseUpdateManager {
 	 * @param fileName
 	 * @param modID
 	 */
-	public void addModsToTheList(String fileName,int modID)
+	public synchronized void addModsToTheList(String fileName,int modID)
 	{
 		installedMods.put(modID, fileName);	
-		updateFile();
 	}
 	
-	public boolean isModIdKnown(int modId)
+	public synchronized boolean isModIdKnown(int modId)
 	{
 		return installedMods.get(modId) != null;
 	}
 	
-	private void updateFile()
+	public synchronized void updateFile()
 	{
 		File modsMap = new File("mods/modsMap.sav");
 		try {

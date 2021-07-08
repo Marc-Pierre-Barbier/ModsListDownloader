@@ -51,12 +51,19 @@ public class ModUpdater {
 				}
 		    }
             in.close();
-            Log.i(ME, "finished");
-
         } catch( IOException e ) {
             e.printStackTrace();
             System.exit(1);
         }
+		
+		//on attend la fin des threads
+		while( !threads.isEmpty() ) {
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException e) {}
+		}
+		Log.i(ME, "finished");
+		curseUpdateManager.updateFile();
     }
 
     public static boolean isAComment(String line)
@@ -143,6 +150,9 @@ final class UpdaterThread extends Thread {
 				else {
 					Log.i("DB", "NEW MOD DETECTED " + modID);
 					upToDate = this.curseUpdateManager.checkAndDelete(new File("mods/" + HttpHelper.getFileNameFromURL(downloadUrl)), pj.getSlug());
+					if(upToDate) {
+						this.curseUpdateManager.addModsToTheList("mods/" + HttpHelper.getFileNameFromURL(downloadUrl), modID);
+					}
 				} 
 
 				if (!upToDate) {
