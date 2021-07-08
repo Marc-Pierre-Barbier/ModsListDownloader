@@ -15,7 +15,7 @@ public class Main {
     public static String mcVersion;
 
 	public static void main(String[] args) {
-		this.mcVersion = "1.12.2";
+		mcVersion = "1.12.2";
 
 		checkModsDirectory();
 		new DatabaseVersionManager().updateIfNeeded();
