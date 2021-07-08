@@ -16,6 +16,7 @@ public class ModUpdater {
     private DirectUpdateManager directUpdateManager;
     private CurseUpdateManager curseUpdateManager;
     private Database db;
+	private final String ME = "ModUpdater";
     
     public ModUpdater() {
         this.db = new Database();
@@ -27,7 +28,7 @@ public class ModUpdater {
 		File modsList = new File("modpack.txt");
 
         if(!(modsList.exists() && modsList.isFile())) {
-            Log.e("Updater", "[ERROR]no mod file found exiting...");
+            Log.e(ME, "[ERROR]no mod file found exiting...");
             System.exit(1);
         }
 
@@ -50,7 +51,7 @@ public class ModUpdater {
 				}
 		    }
             in.close();
-            Log.i("Main", "finished");
+            Log.i(ME, "finished");
 
         } catch( IOException e ) {
             e.printStackTrace();
@@ -71,6 +72,7 @@ final class UpdaterThread extends Thread {
 	private final DirectUpdateManager directUpdateManager;
 	private final CurseUpdateManager curseUpdateManager;
 	private final List<Thread> threads;
+	private static final String ME = "ModUpdaterThread";
 
 	public UpdaterThread(String line, Database db, DirectUpdateManager directUpdateManager, CurseUpdateManager curseUpdateManager, List<Thread> threads) {
 		super();
@@ -88,7 +90,9 @@ final class UpdaterThread extends Thread {
 			handleDirectDownload(line);
 		} else if (line.startsWith("del=")) {
 			String[] delete = line.split("del=");
-			new File(delete[1]).delete();
+			if(new File("mods/" + delete[1]).delete()) {
+				Log.i(ME, "Successfully removed " + delete[1]);
+			}
 		}
 		else {
 			if (line.split("/").length >= 5) {
