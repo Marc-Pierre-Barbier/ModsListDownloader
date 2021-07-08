@@ -23,13 +23,14 @@ public class ModUpdater {
     public void update() {
 		File modsList = new File("modpack.txt");
 
-        if(modsList.exists() && modsList.isFile()) {
+        if(!(modsList.exists() && modsList.isFile())) {
             Log.e("Updater", "[ERROR]no mod file found exiting...");
             System.exit(1);
         }
 
         //parse and download
 		try {
+			//TODO: add threads
 		    BufferedReader in = new BufferedReader(new FileReader(modsList));
 		    while (in.ready()) {
 		    	String line = in.readLine();

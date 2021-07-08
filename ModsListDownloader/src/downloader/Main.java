@@ -43,7 +43,7 @@ public class Main {
 			String cmd = it.next();
 			switch (cmd) {
 				case "--check":
-					System.out.println("--check is not avaliable")
+					System.out.println("--check is not avaliable");
 					checkingonly = true;
 					continue;
 				case "-t":
