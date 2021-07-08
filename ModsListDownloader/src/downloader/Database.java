@@ -55,7 +55,7 @@ public class Database {
 	
 	public ProjectInfo getProjectInfo(int projectId) {
 		ResultSet rs = this.connector.executeRequest(
-		"select slug, name, description from projects where projectid = " + projectId + " and type = 0");
+				"select slug, name, description from projects where projectid = " + projectId + " and type = 0");
 		try {
 			if (rs.next())
 				return new ProjectInfo(rs.getString("slug"), rs.getString("name"), rs.getString("description")); 

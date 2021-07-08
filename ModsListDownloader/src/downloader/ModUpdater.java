@@ -5,6 +5,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Function;
 
 import downloader.forgeSvc.ForgeSvcFile;
 import downloader.helper.HttpHelper;
@@ -29,25 +32,22 @@ public class ModUpdater {
         }
 
         //parse and download
+		List<Thread> threads = new ArrayList<>(Main.threadNb);
 		try {
-			//TODO: add threads
 		    BufferedReader in = new BufferedReader(new FileReader(modsList));
 		    while (in.ready()) {
-		    	String line = in.readLine();
-		    	if (!isAComment(line)) {
-		    		if(line.startsWith("direct="))
-		    		{
-		    			handleDirectDownload(line);
-		    		} else if (line.startsWith("del=")) {
-                        String[] delete = line.split("del=");
-                        new File(delete[1]).delete();
-                    }
-                    else {
-		    			if (line.split("/").length >= 5) {
-                            handleCurseDownload(line);
-		    			}
-		    		}
-		    	}
+				String line = in.readLine();
+				if (!isAComment(line)) {
+					Thread t = new UpdaterThread(line, db, directUpdateManager, curseUpdateManager, threads);
+					t.start();
+					threads.add(t);
+				}
+
+				while(Main.threadNb == threads.size()) {
+					try {
+						Thread.sleep(10);
+					} catch (InterruptedException e) {}
+				}
 		    }
             in.close();
             Log.i("Main", "finished");
@@ -58,7 +58,49 @@ public class ModUpdater {
         }
     }
 
-    public void handleDirectDownload(String line) {
+    public static boolean isAComment(String line)
+	{
+		return line.startsWith("//");
+	}
+}
+
+
+final class UpdaterThread extends Thread {
+	private final String line;
+	private final Database db;
+	private final DirectUpdateManager directUpdateManager;
+	private final CurseUpdateManager curseUpdateManager;
+	private final List<Thread> threads;
+
+	public UpdaterThread(String line, Database db, DirectUpdateManager directUpdateManager, CurseUpdateManager curseUpdateManager, List<Thread> threads) {
+		super();
+		this.line = line;
+		this.db = db;
+		this.directUpdateManager = directUpdateManager;
+		this.curseUpdateManager = curseUpdateManager;
+		this.threads = threads;
+	}
+
+	@Override
+	public void run() {
+		if(line.startsWith("direct="))
+		{
+			handleDirectDownload(line);
+		} else if (line.startsWith("del=")) {
+			String[] delete = line.split("del=");
+			new File(delete[1]).delete();
+		}
+		else {
+			if (line.split("/").length >= 5) {
+				handleCurseDownload(line);
+			}
+		}
+		super.run();
+		//on se retire de la pool d'execution
+		this.threads.remove(this);
+	}
+
+	private void handleDirectDownload(String line) {
         String url = line.replaceFirst("direct=.*@", "");
 		String filename=extractNameFromLink(line);
 		
@@ -78,7 +120,7 @@ public class ModUpdater {
 		}
     }
 
-    public void handleCurseDownload(String line) {
+    private void handleCurseDownload(String line) {
         String name = line.split("/")[5];
         int modID = db.findModBySlug(name);
 		ProjectInfo pj = db.getProjectInfo(modID);
@@ -118,20 +160,15 @@ public class ModUpdater {
 		} 
     }
 
-    public static boolean isAComment(String line)
-	{
-		return line.startsWith("//");
-	}
-
-    private static String extractSlugFromLink(String line) {
-		char[] chars = new char[line.length()-line.indexOf(";")-"direct=".length()+1];
-		line.getChars("direct=".length(), line.indexOf(";"), chars, 0);
-		return new String(chars);
-	}
-	
 	private static String extractNameFromLink(String line) {
 		char[] chars = new char[line.indexOf("@")-line.indexOf(";")];
 		line.getChars(line.indexOf(";")+1, line.indexOf("@"), chars, 0);
+		return new String(chars);
+	}
+
+	private static String extractSlugFromLink(String line) {
+		char[] chars = new char[line.length()-line.indexOf(";")-"direct=".length()+1];
+		line.getChars("direct=".length(), line.indexOf(";"), chars, 0);
 		return new String(chars);
 	}
 }

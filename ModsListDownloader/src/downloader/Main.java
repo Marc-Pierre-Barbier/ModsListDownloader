@@ -20,6 +20,8 @@ public class Main {
 		checkModsDirectory();
 		new DatabaseVersionManager().updateIfNeeded();
 		interpretArgs(args);
+		//no threading option called => only one thread will be used
+		if( threadNb == null)threadNb = 1;
 		new ModUpdater().update();
 	}
 
