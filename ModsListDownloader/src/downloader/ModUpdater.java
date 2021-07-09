@@ -118,29 +118,32 @@ final class UpdaterThread extends Thread {
 
 	@Override
 	public void run() {
-		//used for post download checks
-		File downloadedFile = null;
-		if(line.startsWith("direct=") && line.contains(";")  && line.contains("@"))
-		{
-			downloadedFile = handleDirectDownload(line);
-		} else if (line.startsWith("del=")) {
-			String[] delete = line.split("del=");
-			if(new File("mods/" + delete[1]).delete()) {
-				Log.i(ME, "Successfully removed " + delete[1]);
+		try {
+				//used for post download checks
+			File downloadedFile = null;
+			if(line.startsWith("direct=") && line.contains(";")  && line.contains("@"))
+			{
+				downloadedFile = handleDirectDownload(line);
+			} else if (line.startsWith("del=")) {
+				String[] delete = line.split("del=");
+				if(new File("mods/" + delete[1]).delete()) {
+					Log.i(ME, "Successfully removed " + delete[1]);
+				}
 			}
-		}
-		else {
-			if (line.split("/").length >= 5 && line.contains("curseforge")) {
-				downloadedFile = handleCurseDownload(line);
-			} else {
-				Log.e(ME, "unrecognized line: " + line);
+			else {
+				if (line.split("/").length >= 5 && line.contains("curseforge")) {
+					downloadedFile = handleCurseDownload(line);
+				} else {
+					Log.e(ME, "unrecognized line: " + line);
+				}
 			}
-		}
 
-		if(downloadedFile != null && !ArchiveHelper.checkJarIntegrity(downloadedFile)) {
-			downloadedFile.delete();
-			failedLines.add(line);
-		}
+			if(downloadedFile != null && !ArchiveHelper.checkJarIntegrity(downloadedFile)) {
+				downloadedFile.delete();
+				failedLines.add(line);
+			}
+		} catch(Exception e) { e.printStackTrace(); }
+		
 
 		super.run();
 		//on se retire de la pool d'execution
