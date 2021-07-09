@@ -10,6 +10,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Locale;
 
 import downloader.Log;
 
@@ -111,6 +112,7 @@ public class HttpHelper {
 			// imposible vu qu'on l'a crée precedament
 		}
 
+		double start = System.currentTimeMillis();
 		try (InputStream in = con.getInputStream()) {
 			// on lit par tranche de 4mo
 			byte[] buffer = new byte[4096];
@@ -119,6 +121,15 @@ public class HttpHelper {
 				int bytesRead = in.read(buffer);
 				if (bytesRead < 0)
 					break;
+				{
+					double elapsed = ( System.currentTimeMillis() - start ) / 1000;
+					if(elapsed != 0) {
+						long estimatedBandwith = (long) (bytesRead / elapsed);
+						//display the estimate
+						Log.setStaticPrint(formatBandwidth(estimatedBandwith));
+						start = System.currentTimeMillis();
+					}
+				}
 				downloadingWriter.write(buffer, 0, 	bytesRead);
 			}
 			downloadingWriter.close();
@@ -127,7 +138,36 @@ public class HttpHelper {
 		return null;
 
 	}
-	
+
+	/**
+	 *
+	 * @param estimatedBandwith in o/s
+	 * @return
+	 */
+	private static String formatBandwidth(long estimatedBandwith) {
+		//is ko/s
+		if(estimatedBandwith > 1000) {
+			//is mo/s
+			if(estimatedBandwith > 1000 * 1000) {
+				return String.valueOf(estimatedBandwith/ (1000 * 1000)) + "M" + getLocalizedByte() + "/s";
+			} else {
+				return String.valueOf(estimatedBandwith/ 1000) + "K" + getLocalizedByte() + "/s";
+			}
+		} else {
+			return String.valueOf(estimatedBandwith) + getLocalizedByte() + "/s";
+		}
+	}
+
+	private static String getLocalizedByte() {
+		Locale l = Locale.getDefault();
+
+		if (l.equals(Locale.FRANCE) | l.equals(Locale.FRENCH)) {
+			return "O";
+		} else {
+			return "B";
+		}
+	}
+
 	public static String getFileNameFromURL(String url)
 	{
 		String[] urlsplit = url.split("/");
