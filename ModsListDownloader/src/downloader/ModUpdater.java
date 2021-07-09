@@ -120,7 +120,7 @@ final class UpdaterThread extends Thread {
 	public void run() {
 		//used for post download checks
 		File downloadedFile = null;
-		if(line.startsWith("direct="))
+		if(line.startsWith("direct=") && line.contains(";")  && line.contains("@"))
 		{
 			downloadedFile = handleDirectDownload(line);
 		} else if (line.startsWith("del=")) {
