@@ -130,8 +130,10 @@ final class UpdaterThread extends Thread {
 			}
 		}
 		else {
-			if (line.split("/").length >= 5) {
+			if (line.split("/").length >= 5 && line.contains("curseforge")) {
 				downloadedFile = handleCurseDownload(line);
+			} else {
+				Log.e(ME, "unrecognized line: " + line);
 			}
 		}
 
