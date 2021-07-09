@@ -1,7 +1,6 @@
 package downloader;
 
 import java.io.File;
-import java.io.IOException;
 
 import downloader.helper.ArchiveHelper;
 import downloader.helper.SlugHelper;

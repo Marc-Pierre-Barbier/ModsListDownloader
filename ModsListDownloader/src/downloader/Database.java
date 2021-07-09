@@ -13,14 +13,20 @@ import downloader.forgeSvc.ForgeSvcFile;
 import downloader.helper.HttpHelper;
 
 public class Database {
-	DBConnector connector;
+	private DBConnector connector;
 
-	Gson gson;
-			
+	private Gson gson;
+
+	private static final String ME = "Db";
+
 	public Database() {
 		try {
+			//work around to avoid
 			Class.forName("org.sqlite.JDBC");
-		} catch (ClassNotFoundException e1) {} //it will crash anyway
+		} catch (ClassNotFoundException e1) {
+			Log.e(ME, "Error sqLite was not found");
+			System.exit(1);
+		}
 
 		this.connector = new DBConnector();
 		try {
@@ -39,7 +45,7 @@ public class Database {
 			if (rs.next()) {
 				pjId = rs.getInt("projectid");
 			} else {
-				Log.e("DB", "not found " + slug);
+				Log.e(ME, "not found " + slug);
 				return -1;
 			} 
 		} catch (SQLException e) {

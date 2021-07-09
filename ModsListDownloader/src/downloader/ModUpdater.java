@@ -7,24 +7,23 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
 
 import downloader.forgeSvc.ForgeSvcFile;
 import downloader.helper.HttpHelper;
 
 public class ModUpdater {
-    private DirectUpdateManager directUpdateManager;
-    private CurseUpdateManager curseUpdateManager;
-    private Database db;
+	private DirectUpdateManager directUpdateManager;
+	private CurseUpdateManager curseUpdateManager;
+	private Database db;
 	private final String ME = "ModUpdater";
-    
-    public ModUpdater() {
-        this.db = new Database();
-        this.directUpdateManager = new DirectUpdateManager();
-        this.curseUpdateManager = new CurseUpdateManager();
-    }
 
-    public void update() {
+	public ModUpdater() {
+		this.db = new Database();
+		this.directUpdateManager = new DirectUpdateManager();
+		this.curseUpdateManager = new CurseUpdateManager();
+	}
+
+	public void update() {
 		File modsList = new File("modpack.txt");
 
         if(!(modsList.exists() && modsList.isFile())) {
@@ -35,8 +34,8 @@ public class ModUpdater {
         //parse and download
 		List<Thread> threads = new ArrayList<>(Main.threadNb);
 		try {
-		    BufferedReader in = new BufferedReader(new FileReader(modsList));
-		    while (in.ready()) {
+			BufferedReader in = new BufferedReader(new FileReader(modsList));
+			while (in.ready()) {
 				String line = in.readLine();
 				if (!isAComment(line)) {
 					Thread t = new UpdaterThread(line, db, directUpdateManager, curseUpdateManager, threads);
@@ -49,13 +48,13 @@ public class ModUpdater {
 						Thread.sleep(10);
 					} catch (InterruptedException e) {}
 				}
-		    }
-            in.close();
-        } catch( IOException e ) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-		
+			}
+			in.close();
+		} catch( IOException e ) {
+			e.printStackTrace();
+			System.exit(1);
+		}
+
 		//on attend la fin des threads
 		while( !threads.isEmpty() ) {
 			try {
@@ -64,9 +63,9 @@ public class ModUpdater {
 		}
 		Log.i(ME, "finished");
 		curseUpdateManager.updateFile();
-    }
+	}
 
-    public static boolean isAComment(String line)
+	public static boolean isAComment(String line)
 	{
 		return line.startsWith("//");
 	}
@@ -112,7 +111,7 @@ final class UpdaterThread extends Thread {
 	}
 
 	private void handleDirectDownload(String line) {
-        String url = line.replaceFirst("direct=.*@", "");
+		String url = line.replaceFirst("direct=.*@", "");
 		String filename=extractNameFromLink(line);
 		
 		//le slug est une nom de mods qui se trouve dans le nom du fichier
@@ -123,19 +122,19 @@ final class UpdaterThread extends Thread {
 		{
 			Log.i(ME,"downloading "+ filename);
 			try {
-                HttpHelper.readFileFromUrlToFolder(url,"mods",filename);
-                Log.i(ME,"done");
-            } catch (MalformedURLException e) {
-                Log.e(ME, "could not update mod, error while downloading");
-            }
+				HttpHelper.readFileFromUrlToFolder(url,"mods",filename);
+				Log.i(ME,"done");
+			} catch (MalformedURLException e) {
+				Log.e(ME, "could not update mod, error while downloading");
+			}
 		}
-    }
+	}
 
-    private void handleCurseDownload(String line) {
-        String name = line.split("/")[5];
-        int modID = db.findModBySlug(name);
+	private void handleCurseDownload(String line) {
+		String name = line.split("/")[5];
+		int modID = db.findModBySlug(name);
 		ProjectInfo pj = db.getProjectInfo(modID);
-        ForgeSvcFile svc = db.fetchMod(pj, modID);
+		ForgeSvcFile svc = db.fetchMod(pj, modID);
 
         if (svc != null) {
 			try {
