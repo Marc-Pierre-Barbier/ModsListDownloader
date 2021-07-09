@@ -121,14 +121,13 @@ public class HttpHelper {
 				int bytesRead = in.read(buffer);
 				if (bytesRead < 0)
 					break;
-				{
-					double elapsed = ( System.currentTimeMillis() - start ) / 1000;
-					if(elapsed != 0) {
-						long estimatedBandwith = (long) (bytesRead / elapsed);
-						//display the estimate
-						Log.setStaticPrint(formatBandwidth(estimatedBandwith));
-						start = System.currentTimeMillis();
-					}
+					
+				double elapsed = ( System.currentTimeMillis() - start ) / 1000;
+				if(elapsed != 0) {
+					long estimatedBandwith = (long) (bytesRead / elapsed);
+					//display the estimate
+					Log.setStaticPrint(formatBandwidth(estimatedBandwith));
+					start = System.currentTimeMillis();
 				}
 				downloadingWriter.write(buffer, 0, 	bytesRead);
 			}

@@ -19,12 +19,12 @@ public class Log {
 		//erase last stream since we used \r
 		lastStream.print("");
 		stream.println(line);
-		stream.print(staticLine + "\r");
+		stream.print(staticLine + "                 \r");
 		lastStream = stream;
 	}
 
 	public static void setStaticPrint(String staticString) {
 		staticLine = staticString;
-		System.out.print(staticString + "\r");
+		System.out.print(staticString + "                    \r");
 	}
 }

@@ -22,6 +22,7 @@ public class Main {
 		interpretArgs(args);
 		//no threading option called => only one thread will be used
 		if( threadNb == null)threadNb = 1;
+		Log.i("Main", "Running on " + threadNb + " thread");
 		new ModUpdater().update();
 	}
 

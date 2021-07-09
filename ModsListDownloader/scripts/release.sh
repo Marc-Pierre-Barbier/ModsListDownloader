@@ -4,8 +4,8 @@ then
 fi
 -rm release-${VER}.zip 2> /dev/null
 mv mcDownloader.jar ModPackDl.jar
-echo "java -jar ModPackDl.jar -t -v" > run.sh
-echo "java -jar ModPackDl.jar -t -v" > run.bat
+echo "java -jar ModPackDl.jar --thread 2 -v" > run.sh
+echo "java -jar ModPackDl.jar --thread 2 -v" > run.bat
 echo "pause" >> run.bat
 zip release-${VER}.zip ModPackDl.jar run.sh run.bat
 rm run.sh

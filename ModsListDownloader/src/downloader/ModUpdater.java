@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import downloader.forgeSvc.ForgeSvcFile;
+import downloader.helper.ArchiveHelper;
 import downloader.helper.HttpHelper;
 
 public class ModUpdater {
@@ -61,6 +62,31 @@ public class ModUpdater {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {}
 		}
+
+		if(! UpdaterThread.failedLines.isEmpty()) {
+			List<String> failures = new ArrayList<>(UpdaterThread.failedLines);
+			UpdaterThread.failedLines.clear();
+
+			Log.e(ME, "filed to download " + failures.size());
+			Log.e(ME, "Retrying but slower");
+
+			for(String line : failures) {
+				Thread t = new UpdaterThread(line, db, directUpdateManager, curseUpdateManager, threads);
+				t.start();
+				try {
+					t.join();
+				} catch (InterruptedException e) {}
+			}
+
+			if(! UpdaterThread.failedLines.isEmpty()) {
+				Log.e(ME, "could not download the following mods : ");
+				for(String s: failures) {
+					Log.e(ME, "    " + s);
+				}
+			}
+		}
+
+
 		Log.i(ME, "finished");
 		curseUpdateManager.updateFile();
 	}
@@ -79,6 +105,7 @@ final class UpdaterThread extends Thread {
 	private final CurseUpdateManager curseUpdateManager;
 	private final List<Thread> threads;
 	private static final String ME = "ModUpdaterThread";
+	public static final List<String> failedLines = new ArrayList<>();
 
 	public UpdaterThread(String line, Database db, DirectUpdateManager directUpdateManager, CurseUpdateManager curseUpdateManager, List<Thread> threads) {
 		super(line);
@@ -91,9 +118,11 @@ final class UpdaterThread extends Thread {
 
 	@Override
 	public void run() {
+		//used for post download checks
+		File downloadedFile = null;
 		if(line.startsWith("direct="))
 		{
-			handleDirectDownload(line);
+			downloadedFile = handleDirectDownload(line);
 		} else if (line.startsWith("del=")) {
 			String[] delete = line.split("del=");
 			if(new File("mods/" + delete[1]).delete()) {
@@ -102,15 +131,21 @@ final class UpdaterThread extends Thread {
 		}
 		else {
 			if (line.split("/").length >= 5) {
-				handleCurseDownload(line);
+				downloadedFile = handleCurseDownload(line);
 			}
 		}
+
+		if(downloadedFile != null && !ArchiveHelper.checkJarIntegrity(downloadedFile)) {
+			downloadedFile.delete();
+			failedLines.add(line);
+		}
+
 		super.run();
 		//on se retire de la pool d'execution
 		this.threads.remove(this);
 	}
 
-	private void handleDirectDownload(String line) {
+	private File handleDirectDownload(String line) {
 		String url = line.replaceFirst("direct=.*@", "");
 		String filename=extractNameFromLink(line);
 		
@@ -122,15 +157,16 @@ final class UpdaterThread extends Thread {
 		{
 			Log.i(ME,"downloading "+ filename);
 			try {
-				HttpHelper.readFileFromUrlToFolder(url,"mods",filename);
 				Log.i(ME,"done");
+				return HttpHelper.readFileFromUrlToFolder(url,"mods",filename);
 			} catch (MalformedURLException e) {
 				Log.e(ME, "could not update mod, error while downloading");
 			}
 		}
+		return null;
 	}
 
-	private void handleCurseDownload(String line) {
+	private File handleCurseDownload(String line) {
 		String name = line.split("/")[5];
 		int modID = db.findModBySlug(name);
 		ProjectInfo pj = db.getProjectInfo(modID);
@@ -157,13 +193,14 @@ final class UpdaterThread extends Thread {
 
 				if (!upToDate) {
 					Log.i("MOD", "downloading  " + pj.getName().replace(" ", "-")); 
-					HttpHelper.readFileFromUrlToFolder(downloadUrl, "mods"); 
+					File downloaded = HttpHelper.readFileFromUrlToFolder(downloadUrl, "mods"); 
 					
 					Log.i("MOD", "download finished");
 					if (!this.curseUpdateManager.isModIdKnown(modID)) {
 						this.curseUpdateManager.addModsToTheList(HttpHelper.getFileNameFromURL(downloadUrl), modID);
 						Log.i("DB", "added a mod to the registry"); 
 					} 
+					return downloaded;
 				} 
 			} catch (MalformedURLException e) {
 				e.printStackTrace();
@@ -171,6 +208,7 @@ final class UpdaterThread extends Thread {
 		} else {
 			Log.e("DB", "no file in server");
 		} 
+		return null;
     }
 
 	private static String extractNameFromLink(String line) {
