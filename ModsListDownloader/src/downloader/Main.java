@@ -10,7 +10,6 @@ import java.util.Iterator;
 public class Main {	
 
 	public static boolean verbose;
-	public static boolean checkingonly;
 	public static Integer threadNb;
     public static String mcVersion;
 
@@ -45,10 +44,6 @@ public class Main {
 		while (it.hasNext()) {
 			String cmd = it.next();
 			switch (cmd) {
-				case "--check":
-					System.out.println("--check is not avaliable");
-					checkingonly = true;
-					continue;
 				case "-t":
 					if (threadNb != null) {
 						Log.e("main", "error conflicting arguments --thread and -t");
