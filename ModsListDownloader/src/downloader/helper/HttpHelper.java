@@ -13,6 +13,7 @@ import java.nio.file.Paths;
 import java.util.Locale;
 
 import downloader.Log;
+import downloader.Main;
 
 public class HttpHelper {
 	private HttpHelper() {}
@@ -126,7 +127,7 @@ public class HttpHelper {
 				if(elapsed != 0) {
 					long estimatedBandwith = (long) (bytesRead / elapsed);
 					//display the estimate
-					Log.setStaticPrint(formatBandwidth(estimatedBandwith));
+					Log.setStaticPrint("estimated bandwidth :" + formatBandwidth(estimatedBandwith * Main.threadNb));
 					start = System.currentTimeMillis();
 				}
 				downloadingWriter.write(buffer, 0, 	bytesRead);
