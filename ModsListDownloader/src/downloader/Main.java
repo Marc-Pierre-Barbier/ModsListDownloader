@@ -14,8 +14,15 @@ public class Main {
     public static String mcVersion;
 
 	public static void main(String[] args) {
-		mcVersion = "1.12.2";
-
+		if(mcVersion == null) {
+			mcVersion = "1.12.2";
+		}
+		else {
+			if(!isVersionValid()) {
+				Log.e("main", "the version number provided is invalid");
+				System.exit(1);
+			}
+		}
 		checkModsDirectory();
 		new DatabaseVersionManager().updateIfNeeded();
 		interpretArgs(args);
@@ -64,16 +71,18 @@ public class Main {
 				case "-v":
 					verbose = true;
 					break;
+
+				case "-version":
+					checkNext(it);
+					mcVersion = it.next();
+					break;
 					
 				case "--thread":
 					if (threadNb != null) {
 						Log.e("main", "error conflicting arguments --thread and -t");
 						System.exit(1);
 					} 
-					if (!it.hasNext()) {
-						Log.e("main", "arguments invalid please refer to --help");
-						System.exit(1);
-					} 
+					checkNext(it);
 					String threadNumber = it.next();
 					if (threadNumber.matches("[0-9]*")) {
 						threadNb = Integer.valueOf(Integer.parseInt(threadNumber));
@@ -91,6 +100,24 @@ public class Main {
 					Log.e("main", "unknown args " + cmd + "\nsee --help for help");
 					System.exit(1);
 			} 
+		} 
+	}
+
+	private static boolean isVersionValid() {
+		switch(mcVersion.split(".").length) {
+			case 2:
+				return mcVersion.matches("[0-9]*\\.[0-9]*");
+			case 3:
+				return mcVersion.matches("[0-9]*\\.[0-9]*\\.[0-9]*");
+			default:
+				return false;
+		}
+	}
+
+	private static void checkNext(Iterator<String> it) {
+		if (!it.hasNext()) {
+			Log.e("main", "arguments invalid please refer to --help");
+			System.exit(1);
 		} 
 	}
 }
