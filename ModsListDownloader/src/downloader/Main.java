@@ -53,17 +53,17 @@ public class Main {
 					}
 
 					if (cores <= 0) {
-						Log.i("main","java think you have no cpu core... sooo lets go for 4");
-						threadNb = Integer.valueOf(4);
-						continue;
+						Log.i("main","java think you have no cpu core... sooo lets go for 2");
+						threadNb = Integer.valueOf(2);
+						break;
 					} 
 					Log.i("main", "running on " + cores + " thread");
 					threadNb = Integer.valueOf(cores);
-					continue;
+					break;
 
 				case "-v":
 					verbose = true;
-					continue;
+					break;
 					
 				case "--thread":
 					if (threadNb != null) {
@@ -77,16 +77,16 @@ public class Main {
 					String threadNumber = it.next();
 					if (threadNumber.matches("[0-9]*")) {
 						threadNb = Integer.valueOf(Integer.parseInt(threadNumber));
-						continue;
+						break;
 					} 
 					Log.e("main","arguments invalid please refer to --help");
 					System.exit(1);
-					continue;
+					break;
 
 				case "--help":
-					Log.i("main", "use --check to check without updating\nuse --help to see this help\nuse -v to see verbose\nuse --threads to specify the number of threads\nuse -t to set the number of thread automaticaly");
+					Log.i("main", "use --help to see this help\nuse -v to see verbose\nuse --threads to specify the number of threads\nuse -t to set the number of thread automaticaly");
 					System.exit(0);
-					continue;
+					break;
 				default:
 					Log.e("main", "unknown args " + cmd + "\nsee --help for help");
 					System.exit(1);
