@@ -45,6 +45,8 @@ public class Main {
 			String cmd = it.next();
 			switch (cmd) {
 				case "-t":
+					Log.w("main", "Warning using -t option can lead to corruption during download if you have a lot of cores or a slow internet");
+
 					if (threadNb != null) {
 						Log.e("main", "error conflicting arguments --thread and -t");
 						System.exit(1);

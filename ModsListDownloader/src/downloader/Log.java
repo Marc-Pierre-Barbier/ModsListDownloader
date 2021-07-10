@@ -8,11 +8,15 @@ public class Log {
 	private static PrintStream lastStream = System.out;
 
 	public static void e(String who, String msg) {
-		printNonStatic(String.valueOf(who) + "  :  " + msg, System.err);
+		printNonStatic("[ERROR]" + who + "  :  " + msg, System.err);
 	}
+
+	public static void w(String who, String msg) {
+		printNonStatic("[WARN]" + who + "  :  " + msg, System.out);
+    }
 	
 	public static void i(String who, String msg) {
-		if(Main.verbose) printNonStatic(String.valueOf(who) + "  :  " + msg, System.out);
+		if(Main.verbose) printNonStatic("[INFO]" + who + "  :  " + msg, System.out);
 	}
 
 	private static void printNonStatic(String line, PrintStream stream) {
