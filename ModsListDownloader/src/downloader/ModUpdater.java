@@ -16,7 +16,7 @@ public class ModUpdater {
 	private DirectUpdateManager directUpdateManager;
 	private CurseUpdateManager curseUpdateManager;
 	private Database db;
-	private final String ME = "ModUpdater";
+	private static final String ME = "ModUpdater";
 
 	public ModUpdater() {
 		this.db = new Database();
@@ -33,6 +33,14 @@ public class ModUpdater {
         }
 
         //parse and download
+		startProcessingThreads(modsList);
+		checkForFailures();
+
+		Log.i(ME, "finished");
+		curseUpdateManager.updateFile();
+	}
+
+	private void startProcessingThreads(File modsList) {
 		List<Thread> threads = new ArrayList<>(Main.threadNb);
 		try {
 			BufferedReader in = new BufferedReader(new FileReader(modsList));
@@ -44,10 +52,8 @@ public class ModUpdater {
 					threads.add(t);
 				}
 
-				while(Main.threadNb == threads.size()) {
-					try {
-						Thread.sleep(10);
-					} catch (InterruptedException e) {}
+				while(Main.threadNb >= threads.size()) {
+					threadSleep();
 				}
 			}
 			in.close();
@@ -55,23 +61,20 @@ public class ModUpdater {
 			e.printStackTrace();
 			System.exit(1);
 		}
+		waitThreadsEnd(threads);
+	}
 
-		//on attend la fin des threads
-		while( !threads.isEmpty() ) {
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {}
-		}
-
+	private void checkForFailures() {
 		if(! UpdaterThread.failedLines.isEmpty()) {
 			List<String> failures = new ArrayList<>(UpdaterThread.failedLines);
 			UpdaterThread.failedLines.clear();
+
 
 			Log.e(ME, "filed to download " + failures.size());
 			Log.e(ME, "Retrying but slower");
 
 			for(String line : failures) {
-				Thread t = new UpdaterThread(line, db, directUpdateManager, curseUpdateManager, threads);
+				Thread t = new UpdaterThread(line, db, directUpdateManager, curseUpdateManager, null);
 				t.start();
 				try {
 					t.join();
@@ -85,10 +88,18 @@ public class ModUpdater {
 				}
 			}
 		}
+	}
 
+	private void waitThreadsEnd(List<Thread> threads) {
+		while( !threads.isEmpty() ) {
+			threadSleep();
+		}
+	}
 
-		Log.i(ME, "finished");
-		curseUpdateManager.updateFile();
+	private void threadSleep() {
+		try {
+			Thread.sleep(10);
+		} catch (InterruptedException e) {}
 	}
 
 	public static boolean isAComment(String line)
@@ -105,7 +116,7 @@ final class UpdaterThread extends Thread {
 	private final CurseUpdateManager curseUpdateManager;
 	private final List<Thread> threads;
 	private static final String ME = "ModUpdaterThread";
-	public static final List<String> failedLines = new ArrayList<>();
+	protected static final List<String> failedLines = new ArrayList<>();
 
 	public UpdaterThread(String line, Database db, DirectUpdateManager directUpdateManager, CurseUpdateManager curseUpdateManager, List<Thread> threads) {
 		super(line);
@@ -147,7 +158,7 @@ final class UpdaterThread extends Thread {
 
 		super.run();
 		//on se retire de la pool d'execution
-		this.threads.remove(this);
+		if(this.threads != null)this.threads.remove(this);
 	}
 
 	private File handleDirectDownload(String line) {
